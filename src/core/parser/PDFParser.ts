@@ -253,7 +253,10 @@ class PDFParser extends PDFObjectParser {
         if (this.bytes.next() === CharCodes.n) {
           xref.addEntry(ref, firstInt);
         } else {
-          // this.context.delete(ref);
+          this.context.delete(ref);
+          if (secondInt > 0) {
+            this.context.delete(PDFRef.of(objectNumber, secondInt - 1));
+          }
           xref.addDeletedEntry(ref, firstInt);
         }
         objectNumber += 1;

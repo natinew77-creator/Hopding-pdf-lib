@@ -21,7 +21,16 @@ const decodeStream = (
   params: undefined | typeof PDFNull | PDFDict,
 ) => {
   if (encoding === PDFName.of('FlateDecode')) {
-    return new FlateStream(stream);
+    let decodeParms;
+    if (params instanceof PDFDict) {
+      decodeParms = {
+        predictor: params.lookupMaybe(PDFName.of('Predictor'), PDFNumber)?.asNumber(),
+        colors: params.lookupMaybe(PDFName.of('Colors'), PDFNumber)?.asNumber(),
+        bitsPerComponent: params.lookupMaybe(PDFName.of('BitsPerComponent'), PDFNumber)?.asNumber(),
+        columns: params.lookupMaybe(PDFName.of('Columns'), PDFNumber)?.asNumber(),
+      };
+    }
+    return new FlateStream(stream, undefined, decodeParms);
   }
   if (encoding === PDFName.of('LZWDecode')) {
     let earlyChange = 1;

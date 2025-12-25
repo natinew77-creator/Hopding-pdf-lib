@@ -73,10 +73,17 @@ class PDFXRefStreamParser {
 
     const entries = this.parseEntries();
 
-    // for (let idx = 0, len = entries.length; idx < len; idx++) {
-    // const entry = entries[idx];
-    // if (entry.deleted) this.context.delete(entry.ref);
-    // }
+    for (let idx = 0, len = entries.length; idx < len; idx++) {
+      const entry = entries[idx];
+      if (entry.deleted) {
+        this.context.delete(entry.ref);
+        if (entry.ref.generationNumber > 0) {
+          this.context.delete(
+            PDFRef.of(entry.ref.objectNumber, entry.ref.generationNumber - 1),
+          );
+        }
+      }
+    }
 
     return entries;
   }
@@ -112,6 +119,7 @@ class PDFXRefStreamParser {
         if (typeFieldWidth === 0) type = 1;
 
         const objectNumber = firstObjectNumber + objIdx;
+
         const entry = {
           ref: PDFRef.of(objectNumber, generationNumber),
           offset,

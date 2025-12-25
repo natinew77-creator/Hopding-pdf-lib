@@ -17,6 +17,7 @@
 /* tslint:disable  no-conditional-assignment */
 import DecodeStream from 'src/core/streams/DecodeStream';
 import { StreamType } from 'src/core/streams/Stream';
+import { decodePredictor } from 'src/utils/predictors';
 
 // prettier-ignore
 const codeLenCodeMap = new Int32Array([
@@ -56,7 +57,7 @@ const fixedLitCodeTab = [new Int32Array([
   0x70103, 0x80056, 0x80016, 0x8011e, 0x70113, 0x80076, 0x80036, 0x900cc,
   0x7010b, 0x80066, 0x80026, 0x900ac, 0x80006, 0x80086, 0x80046, 0x900ec,
   0x70107, 0x8005e, 0x8001e, 0x9009c, 0x70117, 0x8007e, 0x8003e, 0x900dc,
-  0x7010f, 0x8006e, 0x8002e, 0x900bc, 0x8000e, 0x8008e, 0x8004e, 0x900fc,
+  0x7010f, 0x8006e, 0x8002e, 0x900bd, 0x8000e, 0x8008e, 0x8004e, 0x900fd,
   0x70100, 0x80051, 0x80011, 0x80119, 0x70110, 0x80071, 0x80031, 0x900c2,
   0x70108, 0x80061, 0x80021, 0x900a2, 0x80001, 0x80081, 0x80041, 0x900e2,
   0x70104, 0x80059, 0x80019, 0x90092, 0x70114, 0x80079, 0x80039, 0x900d2,
@@ -119,11 +120,18 @@ class FlateStream extends DecodeStream {
   private stream: StreamType;
   private codeSize: number;
   private codeBuf: number;
+  private decodeParms?: {
+    predictor?: number;
+    colors?: number;
+    bitsPerComponent?: number;
+    columns?: number;
+  };
 
-  constructor(stream: StreamType, maybeLength?: number) {
+  constructor(stream: StreamType, maybeLength?: number, decodeParms?: any) {
     super(maybeLength);
 
     this.stream = stream;
+    this.decodeParms = decodeParms;
 
     const cmf = stream.getByte();
     const flg = stream.getByte();
@@ -308,6 +316,43 @@ class FlateStream extends DecodeStream {
         buffer[pos] = buffer[pos - dist];
       }
     }
+  }
+
+  decode(): Uint8Array {
+    const bytes = super.decode();
+    if (this.decodeParms) {
+      const { predictor, colors, bitsPerComponent, columns } = this.decodeParms;
+      if (predictor) {
+        return decodePredictor(
+          predictor,
+          colors || 1,
+          bitsPerComponent || 8,
+          columns || 1,
+          bytes,
+        );
+      }
+    }
+    return bytes;
+  }
+
+  getBytes(length?: number): Uint8Array {
+    let bytes = super.getBytes(length || 0);
+    if (bytes instanceof Uint8ClampedArray) {
+      bytes = new Uint8Array(bytes);
+    }
+    if (this.decodeParms) {
+      const { predictor, colors, bitsPerComponent, columns } = this.decodeParms;
+      if (predictor) {
+        return decodePredictor(
+          predictor,
+          colors || 1,
+          bitsPerComponent || 8,
+          columns || 1,
+          bytes,
+        );
+      }
+    }
+    return bytes;
   }
 
   private getBits(bits: number) {

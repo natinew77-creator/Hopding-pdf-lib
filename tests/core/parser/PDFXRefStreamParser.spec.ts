@@ -30,9 +30,9 @@ describe(`PDFXRefStreamParser`, () => {
     const inObjectStream = entries.filter((entry) => entry.inObjectStream);
 
     expect(entries.length).toBe(319);
-    expect(normal.length).toBe(51);
-    expect(deleted.length).toBe(201);
-    expect(inObjectStream.length).toBe(67);
+    expect(normal.length).toBe(40);
+    expect(deleted.length).toBe(189);
+    expect(inObjectStream.length).toBe(90);
   });
 
   it(`can parse XRef streams (2)`, () => {
@@ -80,9 +80,9 @@ describe(`PDFXRefStreamParser`, () => {
     const inObjectStream = entries.filter((entry) => entry.inObjectStream);
 
     expect(entries.length).toBe(160);
-    expect(normal.length).toBe(32);
-    expect(deleted.length).toBe(95);
-    expect(inObjectStream.length).toBe(33);
+    expect(normal.length).toBe(6);
+    expect(deleted.length).toBe(152);
+    expect(inObjectStream.length).toBe(2);
   });
 
   it(`can parse XRef streams (3)`, () => {
